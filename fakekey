@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 
-set -eu -o pipefail
-
 # Requires:
 # * der2ascii/ascii2der tools by David Benjamin:
 #   https://github.com/google/der-ascii
 # * OpenSSL
 
+set -eu -o pipefail
+
 type der2ascii &>/dev/null || echo "Need der2ascii/ascii2der tools from https://github.com/google/der-ascii"
 
-if [[ $# -ne 1 ]] && [[ $# -ne 2 ]]; then
+if [[ ${#} -ne 1 ]] && [[ ${#} -ne 2 ]]; then
     echo "Usage:"
     echo "    fakekey [certificate] [output]"
     echo ""
@@ -19,9 +19,9 @@ fi
 
 TMP="$(mktemp -d)"
 
-[[ "$#" -eq 2 ]] && out="$2" || out="fake.key"
+[[ "${#}" -eq 2 ]] && out="${2}" || out="fake.key"
 
-openssl x509 -noout -pubkey -in "$1" | openssl pkey -outform der -pubin > "${TMP}/cert.der"
+openssl x509 -noout -pubkey -in "${1}" | openssl pkey -outform der -pubin > "${TMP}/cert.der"
 
 openssl genrsa 2048 | openssl pkey -outform der -out "${TMP}/newkey.der"
 
