@@ -23,6 +23,13 @@ if not checked properly.
 
 Requires the [der2ascii/ascii2der](https://github.com/google/der-ascii) tools by David Benjamin.
 
+ocspverify
+==========
+
+Checks OCSP status of certificates with a single command.
+
+It will automatically extract the issuer certificate and OCSP url via AIA.
+
 examples
 ========
 
