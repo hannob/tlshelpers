@@ -30,6 +30,12 @@ Checks OCSP status of certificates with a single command.
 
 It will automatically extract the issuer certificate and OCSP url via AIA.
 
+getsubdomain
+============
+
+Gets all subdomains to a domain by querying the database of the [crt.sh](https://crt.sh)
+Certificate Transparency search engine.
+
 examples
 ========
 
