@@ -1,0 +1,18 @@
+#!/bin/bash
+
+if [[ -z "$1" ]]; then
+	echo "Usage: $0 [DOMAINNAME(S)]"
+	exit 1
+fi
+
+SAN=$(echo $@|sed -e 's!^!DNS:!g' -e 's! !,DNS:!g')
+
+config="[req]
+distinguished_name=r
+req_extensions=v
+[v]
+subjectAltName=$SAN
+[r]"
+
+openssl req -batch -new -nodes -sha256 -out "$1.csr" -keyout "$1.key" \
+	-subj "/CN=$1/" -config <(echo "$config")
