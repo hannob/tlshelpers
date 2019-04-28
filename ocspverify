@@ -18,6 +18,6 @@ openssl verify "${TMP}/issuer.pem" | grep error
 openssl verify -CAfile "${TMP}/issuer.pem" "${1}" | grep error
 [ $? -eq 0 ] && echo "WARNING: Couldn't verify certificate signature"
 
-openssl ocsp -issuer "${TMP}/issuer.pem" -cert "${1}" -url "${ocsp_url}" -header Host "${ocsp_host}" -verify_other "${TMP}/issuer.pem" -no_nonce
+openssl ocsp -issuer "${TMP}/issuer.pem" -cert "${1}" -url "${ocsp_url}" -header Host="${ocsp_host}" -verify_other "${TMP}/issuer.pem" -no_nonce
 
 rm -rf "${TMP}"
