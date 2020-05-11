@@ -10,6 +10,7 @@ ocsp_host=$(echo "${ocsp_url}" | sed -e 's:.*//::g' -e 's:/.*::g')
 
 # Getting AIA issuer certificate and converting it to PEM
 wget -q -O "${TMP}/issuer.der" "${issuer_url}"
+[ $? -eq 0 ] || echo "Failed fetching intermediate" && exit 1
 openssl x509 -inform der -in "${TMP}/issuer.der" -outform pem -out "${TMP}/issuer.pem"
 
 openssl verify "${TMP}/issuer.pem" | grep error
