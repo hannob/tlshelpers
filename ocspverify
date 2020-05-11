@@ -9,8 +9,10 @@ ocsp_url=$(echo "${cert_parsed}" | grep "OCSP - URI" | sed -e 's/.*URI://g')
 ocsp_host=$(echo "${ocsp_url}" | sed -e 's:.*//::g' -e 's:/.*::g')
 
 # Getting AIA issuer certificate and converting it to PEM
-wget -q -O "${TMP}/issuer.der" "${issuer_url}"
-[ $? -eq 0 ] || echo "Failed fetching intermediate" && exit 1
+if ! wget -q -O "${TMP}/issuer.der" "${issuer_url}"; then
+	echo "Failed fetching intermediate"
+	exit 1
+fi
 openssl x509 -inform der -in "${TMP}/issuer.der" -outform pem -out "${TMP}/issuer.pem"
 
 openssl verify "${TMP}/issuer.pem" | grep error
