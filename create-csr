@@ -5,7 +5,7 @@ if [[ -z "$1" ]]; then
 	exit 1
 fi
 
-SAN=$(echo $@|sed -e 's!^!DNS:!g' -e 's! !,DNS:!g')
+SAN=$(echo $@ | sed -e 's!^!DNS:!g' -e 's! !,DNS:!g')
 
 config="[req]
 distinguished_name=r

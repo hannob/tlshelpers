@@ -10,27 +10,27 @@ set -eu -o pipefail
 type der2ascii &>/dev/null || echo "Need der2ascii/ascii2der tools from https://github.com/google/der-ascii"
 
 if [[ ${#} -ne 1 ]] && [[ ${#} -ne 2 ]]; then
-    echo "Usage:"
-    echo "    fakekey [certificate] [output]"
-    echo ""
-    echo "If [output] isn't given we'll write to fake.key."
-    exit 1
+	echo "Usage:"
+	echo "    fakekey [certificate] [output]"
+	echo ""
+	echo "If [output] isn't given we'll write to fake.key."
+	exit 1
 fi
 
 TMP="$(mktemp -d)"
 
 [[ "${#}" -eq 2 ]] && out="${2}" || out="fake.key"
 
-openssl x509 -noout -pubkey -in "${1}" | openssl pkey -outform der -pubin > "${TMP}/cert.der"
+openssl x509 -noout -pubkey -in "${1}" | openssl pkey -outform der -pubin >"${TMP}/cert.der"
 
 openssl genrsa 2048 | openssl pkey -outform der -out "${TMP}/newkey.der"
 
 der2ascii -i "${TMP}/cert.der" -o "${TMP}/cert.ascii"
 der2ascii -i "${TMP}/newkey.der" -o "${TMP}/newkey.ascii"
 
-head -n 2 "${TMP}/newkey.ascii" > "${TMP}/fake.ascii"
-grep INTEGER "${TMP}/cert.ascii" >> "${TMP}/fake.ascii"
-tail -n +5 "${TMP}/newkey.ascii" >> "${TMP}/fake.ascii"
+head -n 2 "${TMP}/newkey.ascii" >"${TMP}/fake.ascii"
+grep INTEGER "${TMP}/cert.ascii" >>"${TMP}/fake.ascii"
+tail -n +5 "${TMP}/newkey.ascii" >>"${TMP}/fake.ascii"
 
 ascii2der -i "${TMP}/fake.ascii" -o "${TMP}/fake.der"
 
