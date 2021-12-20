@@ -4,4 +4,5 @@ query="SELECT lower(NAME_VALUE) NAME_VALUE FROM certificate_and_identities WHERE
 
 (echo $1; echo $query | \
     psql --csv -t -h crt.sh -p 5432 -U guest certwatch | \
-    sed -e 's:^*\.::g') | sort -u
+    grep $1'$' | grep -v '#' | \
+    sed -e 's:^*\.::g' -e 's:.*@::g' -e 's:^\.::g') | sort -u
