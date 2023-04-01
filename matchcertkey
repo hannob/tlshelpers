@@ -27,13 +27,7 @@ fi
 # check test signature
 openssl x509 -in "${1}" -noout -pubkey >"${TMP}/pubkey.pem"
 dd if=/dev/urandom of="${TMP}/rnd" bs=32 count=1 status=none
-openssl rsautl -sign -pkcs -inkey "${2}" -in "${TMP}/rnd" -out "${TMP}/sig"
-openssl rsautl -verify -pkcs -pubin -inkey "${TMP}/pubkey.pem" -in "${TMP}/sig" -out "${TMP}/check"
-
-if cmp -s "${TMP}/check" "${TMP}/rnd"; then
-	echo "Signature ok"
-else
-	echo "Signature verify failed"
-fi
+openssl pkeyutl -sign -inkey "${2}" -in "${TMP}/rnd" -out "${TMP}/sig"
+openssl pkeyutl -verify -pubin -inkey "${TMP}/pubkey.pem" -in "${TMP}/rnd" -sigfile "${TMP}/sig"
 
 rm -rf "${TMP}"
