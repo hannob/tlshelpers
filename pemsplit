@@ -1,0 +1,23 @@
+#!/usr/bin/python3
+# SPDX-License-Identifier: 0BSD
+
+import argparse
+import hashlib
+import pathlib
+import re
+
+pemrex = b"-----BEGIN [A-Z ]*-----.*?-----END [A-Z ]*-----"
+pemrex = re.compile(pemrex, flags=re.MULTILINE | re.DOTALL)
+
+ap = argparse.ArgumentParser()
+ap.add_argument("file")
+ap.add_argument("outdir")
+args = ap.parse_args()
+
+data = pathlib.Path(args.file).read_bytes()
+
+split = pemrex.findall(data)
+
+for x in split:
+    sha2 = hashlib.sha256(x).hexdigest()
+    pathlib.Path(f"{args.outdir}/{sha2}.pem").write_bytes(x)
