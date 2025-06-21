@@ -1,0 +1,41 @@
+#!/usr/bin/python3
+#
+# SPDX-License-Identifier: 0BSD
+#
+# Decoder for PEM structures
+# by Hanno Böck
+
+import argparse
+import base64
+import sys
+import pathlib
+
+ap = argparse.ArgumentParser()
+ap.add_argument("input", nargs="?")
+ap.add_argument("output", nargs="?")
+args = ap.parse_args()
+
+if not args.input or args.input == "-":
+    infile = sys.stdin
+else:
+    infile = open(args.input)
+
+bmode = False
+b64 = ""
+for line in infile:
+    if line.startswith("-----END "):
+        bmode = False
+    elif line.startswith("-----BEGIN "):
+        bmode = True
+    elif bmode:
+        b64 += line
+
+if b64 == "":
+    sys.exit("No PEM data found")
+
+raw = base64.b64decode(b64)
+
+if not args.output or args.output == "-":
+    sys.stdout.buffer.write(raw)
+else:
+    pathlib.Path(args.output).write_bytes(raw)
