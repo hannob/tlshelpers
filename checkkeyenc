@@ -28,12 +28,16 @@ args = ap.parse_args()
 for kf in args.keyfiles:
     kdata = pathlib.Path(kf).read_bytes()
 
-    if b"PRIVATE KEY-----" in kdata:
-        pem = True
-        priv = load_pem_private_key(kdata, password=None)
-    else:
-        pem = False
-        priv = load_der_private_key(kdata, password=None)
+    try:
+        if b"PRIVATE KEY-----" in kdata:
+            pem = True
+            priv = load_pem_private_key(kdata, password=None)
+        else:
+            pem = False
+            priv = load_der_private_key(kdata, password=None)
+    except (ValueError, TypeError):
+        print(f"{kf}: Cannot load key")
+        continue
 
     if not isinstance(priv, ec.EllipticCurvePrivateKey):
         print(f"{kf}: Not an ECDSA key")
