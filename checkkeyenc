@@ -10,6 +10,7 @@
 
 import argparse
 import base64
+import math
 import pathlib
 import re
 import sys
@@ -43,7 +44,7 @@ for kf in args.keyfiles:
         print(f"{kf}: Not an ECDSA key")
         continue
 
-    expectedbytes = priv.key_size // 8
+    expectedbytes = math.ceil(priv.key_size / 8)
 
     if pem:
         pmatch = p_re.search(kdata)
