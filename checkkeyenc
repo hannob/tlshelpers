@@ -25,6 +25,7 @@ p_re = re.compile(b"-----BEGIN[A-Z ]* PRIVATE KEY-----\n(.*)\n-----END[A-Z ]* PR
 
 ap = argparse.ArgumentParser()
 ap.add_argument("keyfiles", nargs="+")
+ap.add_argument("-q", "--quiet", action="store_true", help="Only output errors")
 args = ap.parse_args()
 
 for kf in args.keyfiles:
@@ -38,11 +39,13 @@ for kf in args.keyfiles:
             pem = False
             priv = load_der_private_key(kdata, password=None)
     except (ValueError, TypeError, cryptography.exceptions.UnsupportedAlgorithm):
-        print(f"{kf}: Cannot load key")
+        if not args.quiet:
+            print(f"{kf}: Cannot load key")
         continue
 
     if not isinstance(priv, ec.EllipticCurvePrivateKey):
-        print(f"{kf}: Not an ECDSA key")
+        if not args.quiet:
+            print(f"{kf}: Not an ECDSA key")
         continue
 
     expectedbytes = math.ceil(priv.key_size / 8)
@@ -65,7 +68,7 @@ for kf in args.keyfiles:
 
     if len(priv_d) != expectedbytes:
         print(f"ERROR: {kf} expected {expectedbytes} bytes, got {len(priv_d)} for private d")
-    elif priv_d[0] == 0:
+    elif priv_d[0] == 0 and not args.quiet:
         print(f"INFO: {kf} private d starts with zero byte, but is encoded correctly")
-    else:
+    elif not args.quiet:
         print(f"INFO: {kf} private d does not start with zero byte")
