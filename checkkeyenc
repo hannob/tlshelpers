@@ -48,7 +48,9 @@ for kf in args.keyfiles:
             print(f"{kf}: Not an ECDSA key")
         continue
 
-    expectedbytes = math.ceil(priv.key_size / 8)
+    # Don't use [key].key_size to workaround https://github.com/pyca/cryptography/issues/13700
+    keysize = priv.curve.group_order.bit_length()
+    expectedbytes = math.ceil(keysize / 8)
 
     if pem:
         pmatch = p_re.search(kdata)
