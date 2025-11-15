@@ -1,0 +1,85 @@
+#!/usr/bin/python3
+# SPDX-License-Identifier: 0BSD
+#
+# Get SMP certificate from a peppol id
+
+import argparse
+import base64
+import hashlib
+import os
+import pathlib
+import urllib.request
+
+import dns.resolver
+import lxml.etree
+
+BEGINCERT = "-----BEGIN CERTIFICATE-----\n"
+ENDCERT = "\n-----END CERTIFICATE-----\n"
+
+crtdups = set()
+
+
+def getsmp(xid):
+    if args.md5:
+        mh = hashlib.md5(xid.encode()).hexdigest()  # noqa: DUO130,S324
+        # fixme: evtl. mit cname geht mehr
+        phost = f"B-{mh}.iso6523-actorid-upis.edelivery.tech.ec.europa.eu"
+        purl = f"http://{phost}/iso6523-actorid-upis::{xid}"
+    else:
+        sh = hashlib.sha256(xid.encode()).digest()
+        sh = base64.b32encode(sh).decode().strip("=").lower()
+        phost = f"{sh}.iso6523-actorid-upis.edelivery.tech.ec.europa.eu"
+
+        answer = dns.resolver.resolve(phost, "NAPTR")
+        ppref = answer[0].regexp.split(b"!")[-2].decode()
+
+        purl = f"{ppref}/iso6523-actorid-upis::{xid}"
+
+    with urllib.request.urlopen(purl) as u:
+        xdata = u.read()
+
+    if not args.certonly:
+        pathlib.Path(f"{outdir}/{xid}.base").write_bytes(xdata)
+
+    etx = lxml.etree.fromstring(xdata)
+
+    i = 0
+    for x in etx.xpath("//*[@href]/@href"):
+        with urllib.request.urlopen(x) as u:
+            udata = u.read()
+        if not args.certonly:
+            pathlib.Path(f"{outdir}/{xid}.{i}.smp").write_bytes(udata)
+        etu = lxml.etree.fromstring(udata)
+        for y in etu.iter():
+            if y.tag.endswith("Certificate"):
+                cert = BEGINCERT + y.text.strip() + ENDCERT
+                if cert in crtdups:
+                    continue
+                crtdups.add(cert)
+                if args.certonly:
+                    shash = hashlib.sha256(cert.encode()).hexdigest()
+                    fp = f"{outdir}/{shash}.crt"
+                    if not os.path.exists(fp):
+                        pathlib.Path(fp).write_text(cert)
+                else:
+                    pathlib.Path(f"{outdir}/{xid}.{i}.crt").write_text(cert)
+        i += 1
+
+
+ap = argparse.ArgumentParser()
+ap.add_argument("pepid")
+ap.add_argument("--md5", action="store_true")
+ap.add_argument("-o", "--outdir")
+ap.add_argument("-c", "--certonly", action="store_true")
+args = ap.parse_args()
+
+if args.outdir:
+    outdir = args.outdir
+else:
+    outdir = "out"
+
+pepid = args.pepid
+
+if "::" in pepid:
+    pepid = pepid.split("::")[-1]
+getsmp(pepid)
