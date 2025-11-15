@@ -1,7 +1,12 @@
 #!/usr/bin/python3
 # SPDX-License-Identifier: 0BSD
 #
-# Get SMP certificate from a peppol id
+# Get SMP certificate from a peppol ID
+#
+# Participant IDs can be fetched from the Peppol Directory:
+#   https://directory.peppol.eu/
+# Direct Download:
+#   https://directory.peppol.eu/export/participants-csv
 
 import argparse
 import base64
