@@ -1,0 +1,24 @@
+#!/bin/bash
+# SPDX-License-Identifier: 0BSD
+#
+# Runs Batch GCD / fastgcd attack on directory with PEM X.509 Certificates,
+# needs fastgcd tool: https://factorable.net/resources.html
+
+TMPD=$(mktemp -d)
+
+find -name \*.crt -exec openssl x509 -noout -modulus -in {} \; |
+	sed -e 's:^Modulus=::g' |
+	grep -v "No modulus for this public key type" |
+	sort -u \
+		>$TMPD/modu
+
+cd "$TMPD"
+fastgcd modu
+
+if [ -s "$TMPD/gcds" ]; then
+	echo "Found shared moduli, results in:"
+	echo "$TMPD"
+else
+	echo "No results!"
+	rm -r "$TMPD"
+fi
