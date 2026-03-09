@@ -20,4 +20,4 @@ split = pemrex.findall(data)
 
 for x in split:
     sha2 = hashlib.sha256(x).hexdigest()
-    pathlib.Path(f"{args.outdir}/{sha2}.pem").write_bytes(x)
+    pathlib.Path(f"{args.outdir}/{sha2}.pem").write_bytes(x + b"\n")
