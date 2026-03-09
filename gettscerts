@@ -1,0 +1,18 @@
+#!/bin/bash
+# SPDX-License-Identifier: 0BSD
+#
+# Extract certificate from a Time-Stamp Protocol (TSP) server
+#
+# Here's a list of public servers (also check comments):
+# https://gist.github.com/Manouchehri/fd754e402d98430243455713efada710
+#set -euo pipefail
+
+TDIR=$(mktemp -d)
+
+cfn=$(echo $1 | sed -e 's:[^a-z0-9A-Z.-]\+:_:g')
+
+openssl rand 512 | openssl ts -query -data - -cert -sha256 | curl -sk --data-binary @- "$1" -o "$TDIR/rand_response.tsr"
+openssl ts -reply -in "$TDIR/rand_response.tsr" -token_out -out "$TDIR/rand_response.tsr.pkcs7"
+openssl pkcs7 -inform DER -in "$TDIR/rand_response.tsr.pkcs7" -print_certs >"$cfn.crt"
+
+rm -r "$TDIR"
