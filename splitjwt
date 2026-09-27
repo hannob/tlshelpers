@@ -1,0 +1,20 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: 0BSD
+#
+# Split and decode JWT file
+
+import argparse
+import base64
+import pathlib
+
+ap = argparse.ArgumentParser()
+ap.add_argument("file")
+args = ap.parse_args()
+
+dat = pathlib.Path(args.file).read_text()
+
+c = 0
+for chunk in dat.split("."):
+    dec = base64.urlsafe_b64decode(chunk + "===")
+    pathlib.Path(f"out/{c}.txt").write_bytes(dec)
+    c += 1
