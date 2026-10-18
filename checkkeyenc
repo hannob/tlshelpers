@@ -20,7 +20,7 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.serialization import load_der_private_key, load_pem_private_key
 from pyasn1.codec.der.decoder import decode
 
-p_re = re.compile(b"-----BEGIN[A-Z ]* PRIVATE KEY-----\n(.*)\n-----END[A-Z ]* PRIVATE KEY-----",
+p_re = re.compile(rb"-----BEGIN[A-Z ]* PRIVATE KEY-----\n(.*)\n-----END[A-Z ]* PRIVATE KEY-----",
                   flags=re.MULTILINE | re.DOTALL)
 
 ap = argparse.ArgumentParser()
