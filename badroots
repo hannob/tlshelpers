@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: 0BSD
+#
+# Check certificates for presence of one of the roots affected by
+# the eMudhra incident (CVE-2026-111943).
+#
+# Checks all certificates in /etc/ssl/certs/ by default.
+
+import argparse
+import hashlib
+import os
+import pathlib
+import warnings
+
+from cryptography import x509
+from cryptography.hazmat import backends
+from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+from cryptography.utils import CryptographyDeprecationWarning
+
+PRE = b"-----BEGIN CERTIFICATE-----"
+
+badcerts = {"bd153ed7b0434f6886b17bce8bbe84ed340c7132d702a8f4fa318f756ecbd6f3":
+            "AAAA Certificate Services (Comodo)",
+            "c619e4780ed8e0abeda24ad732567de4383a7ea941338f6d1a7d1b49ac792fe9":
+            "emSign Root TLS CA - G3",
+            "8d417db2dd8bf5e3084d1e3f196d583849d81bdd4c00c70b9d39369e96b8c782":
+            "emSign ECC Root CA - G3"}
+
+
+def checkfile(fp):
+    try:
+        content = pathlib.Path(fp).read_bytes()
+    except FileNotFoundError:
+        print(f"INFO: Cannot read {fp}, possibly broken symlink")
+        return
+
+    for pem in content.split(PRE)[1:]:
+        cert = x509.load_pem_x509_certificate(PRE + pem, backend=backends.default_backend())
+        pub = cert.public_key()
+        pub = pub.public_bytes(Encoding.DER, PublicFormat.SubjectPublicKeyInfo)
+        spki = hashlib.sha256(pub).hexdigest()
+        if spki in badcerts:
+            print(f"VULNERABLE: {badcerts[spki]} in {fp}")
+
+
+warnings.filterwarnings("ignore", category=CryptographyDeprecationWarning)
+
+ap = argparse.ArgumentParser()
+ap.add_argument("inputs", help="File or dir with certs", nargs="*")
+args = ap.parse_args()
+
+if not args.inputs:
+    inputs = ["/etc/ssl/certs/"]
+else:
+    inputs = args.inputs
+
+for inp in inputs:
+    if not os.path.isdir(inp):
+        checkfile(inp)
+    else:
+        for root, _, files in os.walk(inp, topdown=False):
+            for filename in files:
+                checkfile(os.path.join(root, filename))
